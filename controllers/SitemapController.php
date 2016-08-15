@@ -13,13 +13,13 @@ class Pimcoresitemapplugin_SitemapController extends \Pimcore\Controller\Action\
 
     public function viewAction()
     {
-        // Default filename
-        $filename = '/sitemap.xml';
-
         // Special case: subsite in the tree
         if (Site::isSiteRequest()) {
             $site = Site::getCurrentSite();
             $filename = '/' . $site->getMainDomain() . '.xml';
+        } else {
+            // Default filename
+            $filename = '/'. \Pimcore\Config::getSystemConfig()->get("general")->get("domain") . '.xml';
         }
 
         // Outputting the XML

@@ -15,10 +15,12 @@
 
 namespace Byng\Pimcore\Sitemap\Generator;
 
-use Pimcore\Config;
-use Pimcore\Model\Document;
 use Byng\Pimcore\Sitemap\Gateway\DocumentGateway;
 use Byng\Pimcore\Sitemap\Notifier\GoogleNotifier;
+use Byng\Pimcore\Sitemap\SitemapPlugin;
+use Pimcore\Config;
+use Pimcore\Model\Document;
+use Pimcore\Model\Site;
 use SimpleXMLElement;
 
 /**
@@ -43,19 +45,18 @@ final class SitemapGenerator
      */
     private $documentGateway;
 
+    /**
+     * @var array
+     */
+    private $sitesRoots = array();
+
 
     /**
      * SitemapGenerator constructor.
      */
     public function __construct()
     {
-        $this->hostUrl = Config::getSystemConfig()->get("general")->get("domain");
         $this->documentGateway = new DocumentGateway();
-
-        $this->xml = new SimpleXMLElement(
-            '<?xml version="1.0" encoding="UTF-8"?>'
-            . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>'
-        );
     }
 
     /**
@@ -65,14 +66,22 @@ final class SitemapGenerator
      */
     public function generateXml()
     {
-        // Get all the root elements with parentId '1'
-        $rootDocuments = $this->documentGateway->getChildren(1);
+        // Retrieve site trees
+        $siteRoots = new Site\Listing();
+        $siteRoots = $siteRoots->load();
 
-        foreach ($rootDocuments as $rootDocument) {
-            $this->addUrlChild($rootDocument);
-            $this->listAllChildren($rootDocument);
+        // Build siteRoots table: [ ID => Domain ]
+        /* @var Site $siteRoot */
+        foreach ($siteRoots as $siteRoot){
+            $this->sitesRoots[$siteRoot->getRootId()] = $siteRoot->getMainDomain();
         }
-        $this->xml->asXML(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . "/sitemap.xml");
+
+        // Also append the default tree
+        $this->sitesRoots[1] = Config::getSystemConfig()->get("general")->get("domain");
+
+        foreach($this->sitesRoots as $siteRootID => $siteRootDomain){
+            $this->generateSiteXml($siteRootID, $siteRootDomain);
+        }
 
         if (Config::getSystemConfig()->get("general")->get("environment") === "production") {
             $this->notifySearchEngines();
@@ -89,7 +98,12 @@ final class SitemapGenerator
     {
         $children = $this->documentGateway->getChildren($document->getId());
 
+        /* @var $child Document */
         foreach ($children as $child) {
+            // If we are on a siteRoot, skipping it (handled in a different sitemap)
+            if(array_key_exists($child->getId(), $this->sitesRoots))
+                continue;
+
             $this->addUrlChild($child);
             $this->listAllChildren($child);
         }
@@ -106,6 +120,7 @@ final class SitemapGenerator
         if (
             $document instanceof Document\Page &&
             !$document->getProperty("sitemap_exclude")
+            && !array_key_exists($document->getId(), $this->sitesRoots)
         ) {
             echo $this->hostUrl . $document->getFullPath() . "\n";
             $url = $this->xml->addChild("url");
@@ -139,5 +154,22 @@ final class SitemapGenerator
         } else {
             echo "Google has not been notified \n";
         }
+    }
+
+    private function generateSiteXml($parentId, $hostUrl)
+    {
+        $this->xml = new SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>'
+        );
+
+        // Set current hostUrl
+        $this->hostUrl = $hostUrl;
+
+        $rootDocument = Document::getById($parentId);
+        $this->addUrlChild($rootDocument);
+        $this->listAllChildren($rootDocument);
+
+        $this->xml->asXML(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . '/' . $hostUrl .'.xml');
     }
 }
