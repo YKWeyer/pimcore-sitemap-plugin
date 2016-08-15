@@ -30,6 +30,7 @@ use Pimcore\Model\Staticroute;
 class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\PluginInterface
 {
     const MAINTENANCE_JOB_GENERATE_SITEMAP = "create-sitemap";
+    const SITEMAP_FOLDER = '/var/plugins/Sitemap';
 
     /**
      * {@inheritdoc}
@@ -78,6 +79,9 @@ class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\Plugin
                 ->setController('sitemap')
                 ->setAction('view')
                 ->save();
+
+            // Create sitemap folder
+            mkdir(PIMCORE_WEBSITE_PATH . self::SITEMAP_FOLDER, 0777, true);
 
             return "Sitemap plugin successfully installed";
         }

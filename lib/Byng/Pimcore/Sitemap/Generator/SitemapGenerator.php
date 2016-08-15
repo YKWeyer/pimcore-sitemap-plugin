@@ -72,7 +72,7 @@ final class SitemapGenerator
             $this->addUrlChild($rootDocument);
             $this->listAllChildren($rootDocument);
         }
-        $this->xml->asXML(PIMCORE_DOCUMENT_ROOT . "/sitemap.xml");
+        $this->xml->asXML(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . "/sitemap.xml");
 
         if (Config::getSystemConfig()->get("general")->get("environment") === "production") {
             $this->notifySearchEngines();
