@@ -20,6 +20,7 @@ use Pimcore\Model\Property\Predefined as PredefinedProperty;
 use Pimcore\Model\Schedule\Manager\Procedural as ProceduralScheduleManager;
 use Pimcore\Model\Schedule\Maintenance\Job as MaintenanceJob;
 use Byng\Pimcore\Sitemap\Generator\SitemapGenerator;
+use Pimcore\Model\Staticroute;
 
 /**
  * Sitemap Plugin
@@ -68,6 +69,16 @@ class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\Plugin
 
             $property->save();
 
+            // Create redirect rule
+            $route = Staticroute::create();
+            $route->setName('sitemap')
+                ->setPattern('/\/sitemap\.xml/')
+                ->setReverse('/sitemap.xml')
+                ->setModule('PimcoreSitemapPlugin')
+                ->setController('sitemap')
+                ->setAction('view')
+                ->save();
+
             return "Sitemap plugin successfully installed";
         }
 
@@ -82,6 +93,9 @@ class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\Plugin
         if (SitemapPlugin::isInstalled()) {
             $property = PredefinedProperty::getByKey("sitemap_exclude");
             $property->delete();
+
+            $route = Staticroute::getByName('sitemap');
+            $route->delete();
 
             return "Sitemap plugin is successfully uninstalled";
         }

@@ -17,6 +17,7 @@
         <!-- include paths relative to plugin-directory -->
         <pluginIncludePaths>
             <path>/PimcoreSitemapPlugin/lib</path>
+            <path>/PimcoreSitemapPlugin/controllers</path>
         </pluginIncludePaths>
 
         <!-- namespaces to register with autoloader-->
