@@ -11,11 +11,13 @@ use Byng\Pimcore\Sitemap\SitemapPlugin as SitemapPlugin;
 class Pimcoresitemapplugin_SitemapController extends \Pimcore\Controller\Action\Frontend
 {
 
+    /*
+     * Shows the sitemap.xml of the currently visited website
+     */
     public function viewAction()
     {
         // Special case: subsite in the tree
-        if (Site::isSiteRequest()) {
-            $site = Site::getCurrentSite();
+        if (isset($this->document) && $site = \Pimcore\Tool\Frontend::getSiteForDocument($this->document)) {
             $filename = '/' . $site->getMainDomain() . '.xml';
         } else {
             // Default filename
