@@ -89,6 +89,30 @@ final class SitemapGenerator
     }
 
     /**
+     * Generate a sitemap xml file for a defined site, with a specific hostUrl
+     *
+     * @param $rootId
+     * @param $hostUrl
+     * @return string
+     */
+    private function generateSiteXml($rootId, $hostUrl)
+    {
+        $this->xml = new SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>'
+        );
+
+        // Set current hostUrl
+        $this->hostUrl = $hostUrl;
+
+        $rootDocument = Document::getById($rootId);
+        $this->addUrlChild($rootDocument);
+        $this->listAllChildren($rootDocument);
+
+        $this->xml->asXML(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . '/' . $hostUrl .'.xml');
+    }
+
+    /**
      * Finds all the children of a document recursively
      *
      * @param Document $document
@@ -156,20 +180,4 @@ final class SitemapGenerator
         }
     }
 
-    private function generateSiteXml($parentId, $hostUrl)
-    {
-        $this->xml = new SimpleXMLElement(
-            '<?xml version="1.0" encoding="UTF-8"?>'
-            . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>'
-        );
-
-        // Set current hostUrl
-        $this->hostUrl = $hostUrl;
-
-        $rootDocument = Document::getById($parentId);
-        $this->addUrlChild($rootDocument);
-        $this->listAllChildren($rootDocument);
-
-        $this->xml->asXML(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . '/' . $hostUrl .'.xml');
-    }
 }
