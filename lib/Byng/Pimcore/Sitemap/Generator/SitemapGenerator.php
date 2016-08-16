@@ -83,6 +83,7 @@ final class SitemapGenerator
             $this->generateSiteXml($siteRootID, $siteRootDomain);
         }
 
+        // @ToDo: should we also notify Google for each subsites sitemaps?
         if (Config::getSystemConfig()->get("general")->get("environment") === "production") {
             $this->notifySearchEngines();
         }
