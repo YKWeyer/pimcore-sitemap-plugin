@@ -103,7 +103,7 @@ final class SitemapGenerator
         );
 
         // Set current hostUrl
-        $this->hostUrl = $hostUrl;
+        $this->hostUrl = 'https://' . $hostUrl;
 
         $rootDocument = Document::getById($rootId);
         $this->addUrlChild($rootDocument);
