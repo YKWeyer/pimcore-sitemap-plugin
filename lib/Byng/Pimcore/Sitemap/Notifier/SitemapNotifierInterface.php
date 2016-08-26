@@ -25,7 +25,8 @@ interface SitemapNotifierInterface
     /**
      * Notify something that the sitemap has been updated.
      *
+     * @param string $domain the default domain if empty
      * @return bool
      */
-    public function notify();
+    public function notify($domain = null);
 }

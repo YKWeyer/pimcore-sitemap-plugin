@@ -27,12 +27,12 @@ final class GoogleNotifier implements SitemapNotifierInterface
     /**
      * {@inheritdoc}
      */
-    public function notify()
+    public function notify($domain = null)
     {
         $ch = curl_init(
             sprintf(
                 "http://www.google.com/webmasters/sitemaps/ping?sitemap=%s/sitemap.xml",
-                Config::getSystemConfig()->get("general")->get("domain")
+                $domain ?: Config::getSystemConfig()->get("general")->get("domain")
             )
         );
 

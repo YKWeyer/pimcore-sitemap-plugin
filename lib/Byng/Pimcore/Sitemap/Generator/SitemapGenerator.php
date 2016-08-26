@@ -79,14 +79,14 @@ final class SitemapGenerator
         // Also append the default tree
         $this->sitesRoots[1] = Config::getSystemConfig()->get("general")->get("domain");
 
+        $notifySearchEngines = Config::getSystemConfig()->get("general")->get("environment") === "production";
         foreach($this->sitesRoots as $siteRootID => $siteRootDomain){
             $this->generateSiteXml($siteRootID, $siteRootDomain);
+            
+            if ($notifySearchEngines)
+                $this->notifySearchEngines('https://' . $siteRootDomain);
         }
 
-        // @ToDo: should we also notify Google for each subsites sitemaps?
-        if (Config::getSystemConfig()->get("general")->get("environment") === "production") {
-            $this->notifySearchEngines();
-        }
     }
 
     /**
@@ -168,13 +168,14 @@ final class SitemapGenerator
     /**
      * Notify search engines about the sitemap update.
      *
+     * @param string $domain
      * @return void
      */
-    private function notifySearchEngines()
+    private function notifySearchEngines($domain = null)
     {
         $googleNotifier = new GoogleNotifier();
 
-        if ($googleNotifier->notify()) {
+        if ($googleNotifier->notify($domain = null)) {
             echo "Google has been notified \n";
         } else {
             echo "Google has not been notified \n";
