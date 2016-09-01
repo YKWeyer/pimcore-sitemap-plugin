@@ -72,7 +72,7 @@ final class SitemapGenerator
 
         // Build siteRoots table: [ ID => Domain ]
         /* @var Site $siteRoot */
-        foreach ($siteRoots as $siteRoot){
+        foreach ($siteRoots as $siteRoot) {
             $this->sitesRoots[$siteRoot->getRootId()] = $siteRoot->getMainDomain();
         }
 
@@ -80,7 +80,7 @@ final class SitemapGenerator
         $this->sitesRoots[1] = Config::getSystemConfig()->get("general")->get("domain");
 
         $notifySearchEngines = Config::getSystemConfig()->get("general")->get("environment") === "production";
-        foreach($this->sitesRoots as $siteRootID => $siteRootDomain){
+        foreach ($this->sitesRoots as $siteRootID => $siteRootDomain) {
             $this->generateSiteXml($siteRootID, $siteRootDomain);
 
             if ($notifySearchEngines) {
@@ -111,7 +111,7 @@ final class SitemapGenerator
         $this->addUrlChild($rootDocument);
         $this->listAllChildren($rootDocument);
 
-        $this->xml->asXML(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . '/' . $hostUrl .'.xml');
+        $this->xml->asXML(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . '/' . $hostUrl . '.xml');
     }
 
     /**
@@ -127,7 +127,7 @@ final class SitemapGenerator
         /* @var $child Document */
         foreach ($children as $child) {
             // If we are on a siteRoot, skipping it (handled in a different sitemap)
-            if(array_key_exists($child->getId(), $this->sitesRoots))
+            if (array_key_exists($child->getId(), $this->sitesRoots))
                 continue;
 
             $this->addUrlChild($child);
