@@ -93,8 +93,8 @@ final class SitemapGenerator
     /**
      * Generate a sitemap xml file for a defined site, with a specific hostUrl
      *
-     * @param $rootId
-     * @param $hostUrl
+     * @param int $rootId
+     * @param string $hostUrl
      * @return string
      */
     private function generateSiteXml($rootId, $hostUrl)
@@ -127,8 +127,9 @@ final class SitemapGenerator
         /* @var $child Document */
         foreach ($children as $child) {
             // If we are on a siteRoot, skipping it (handled in a different sitemap)
-            if (array_key_exists($child->getId(), $this->sitesRoots))
+            if (array_key_exists($child->getId(), $this->sitesRoots)) {
                 continue;
+            }
 
             $this->addUrlChild($child);
             $this->listAllChildren($child);
