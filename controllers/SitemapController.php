@@ -7,8 +7,9 @@
  */
 
 use Byng\Pimcore\Sitemap\SitemapPlugin as SitemapPlugin;
+use Pimcore\Controller\Action\Frontend as Frontend;
 
-class Pimcoresitemapplugin_SitemapController extends \Pimcore\Controller\Action\Frontend
+final class Pimcoresitemapplugin_SitemapController extends Frontend
 {
 
     /*
