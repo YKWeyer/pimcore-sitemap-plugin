@@ -83,8 +83,9 @@ final class SitemapGenerator
         foreach($this->sitesRoots as $siteRootID => $siteRootDomain){
             $this->generateSiteXml($siteRootID, $siteRootDomain);
 
-            if ($notifySearchEngines)
+            if ($notifySearchEngines) {
                 $this->notifySearchEngines('https://' . $siteRootDomain);
+            }
         }
 
     }
