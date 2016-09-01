@@ -82,7 +82,7 @@ final class SitemapGenerator
         $notifySearchEngines = Config::getSystemConfig()->get("general")->get("environment") === "production";
         foreach($this->sitesRoots as $siteRootID => $siteRootDomain){
             $this->generateSiteXml($siteRootID, $siteRootDomain);
-            
+
             if ($notifySearchEngines)
                 $this->notifySearchEngines('https://' . $siteRootDomain);
         }
@@ -175,7 +175,7 @@ final class SitemapGenerator
     {
         $googleNotifier = new GoogleNotifier();
 
-        if ($googleNotifier->notify($domain = null)) {
+        if ($googleNotifier->notify($domain)) {
             echo "Google has been notified \n";
         } else {
             echo "Google has not been notified \n";
