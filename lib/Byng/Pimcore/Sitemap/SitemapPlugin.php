@@ -83,8 +83,11 @@ class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\Plugin
                 ->setAction('view')
                 ->save();
 
-            // Create sitemap folder
-            mkdir(PIMCORE_WEBSITE_PATH . self::SITEMAP_FOLDER, 0777, true);
+            // Create sitemap folder (if doesn't exist already)
+            if (!is_dir(PIMCORE_WEBSITE_PATH . self::SITEMAP_FOLDER)) {
+                mkdir(PIMCORE_WEBSITE_PATH . self::SITEMAP_FOLDER, 0777, true);
+            }
+
             // Get Sites FQDN map
             $sites = self::getSitesProtocolMap();
 
