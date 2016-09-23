@@ -195,9 +195,13 @@ class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\Plugin
     public static function isInstalled()
     {
         $property = PredefinedProperty::getByKey("sitemap_exclude");
-        if ($property && $property->getId()) {
-            return true;
+        if (!$property || !$property->getId()) {
+            return false;
         }
-        return false;
+        if (!file_exists(self::CONFIGURATION_FILE)) {
+            return false;
+        }
+        return true;
     }
+
 }
