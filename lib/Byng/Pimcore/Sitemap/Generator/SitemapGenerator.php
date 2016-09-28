@@ -36,6 +36,11 @@ final class SitemapGenerator
     private $hostUrl;
 
     /**
+     * @var \Zend_Config
+     */
+    private $host;
+
+    /**
      * @var SimpleXMLElement
      */
     private $xml;
@@ -71,8 +76,9 @@ final class SitemapGenerator
         $siteRoots = $config->get('sites')->get('site');
 
         // Build siteRoots ID array
+        /* @var \Zend_Config $siteRoot */
         foreach ($siteRoots as $siteRoot) {
-            $this->sitesRoots[] = (int)$siteRoot->rootId;
+            $this->sitesRoots[(int)$siteRoot->rootId] = $siteRoot;
         }
 
         $notifySearchEngines = Config::getSystemConfig()->get("general")->get("environment") === "production";
@@ -103,12 +109,13 @@ final class SitemapGenerator
 
         // Set current hostUrl
         $this->hostUrl = $hostUrl;
+        $this->host = $this->sitesRoots[$rootId];
 
         $rootDocument = Document::getById($rootId);
         $this->addUrlChild($rootDocument);
         $this->listAllChildren($rootDocument);
 
-        $this->xml->asXML(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . '/' . parse_url($hostUrl, PHP_URL_HOST) . '.xml');
+        $this->xml->asXML(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . '/' . $this->host->domain . '.xml');
     }
 
     /**
@@ -124,7 +131,7 @@ final class SitemapGenerator
         /* @var $child Document */
         foreach ($children as $child) {
             // If we are on a siteRoot, skipping it (handled in a different sitemap)
-            if (in_array($child->getId(), $this->sitesRoots)) {
+            if (array_key_exists($child->getId(), $this->sitesRoots)) {
                 continue;
             }
 
@@ -144,7 +151,7 @@ final class SitemapGenerator
         if (
             $document instanceof Document\Page &&
             !$document->getProperty("sitemap_exclude")
-            && !in_array($document->getId(), $this->sitesRoots)
+            && !array_key_exists($document->getId(), $this->sitesRoots)
         ) {
             echo $this->hostUrl . $document->getFullPath() . "\n";
             $url = $this->xml->addChild("url");
