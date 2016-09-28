@@ -153,9 +153,17 @@ final class SitemapGenerator
             !$document->getProperty("sitemap_exclude")
             && !array_key_exists($document->getId(), $this->sitesRoots)
         ) {
-            echo $this->hostUrl . $document->getFullPath() . "\n";
+            $fullPath = $document->getFullPath();
+
+            // Remove the site path (if any) from the full path
+            $rootPath = $this->host->rootPath;
+            if(!is_null($rootPath) && strpos($fullPath, '/' . $rootPath . '/') === 0){
+                $fullPath = str_replace('/' . $rootPath, '', $fullPath);
+            }
+
+            echo $this->hostUrl . $fullPath . "\n";
             $url = $this->xml->addChild("url");
-            $url->addChild('loc', $this->hostUrl . $document->getFullPath());
+            $url->addChild('loc', $this->hostUrl . $fullPath);
             $url->addChild('lastmod', $this->getDateFormat($document->getModificationDate()));
         }
     }

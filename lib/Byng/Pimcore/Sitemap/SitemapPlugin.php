@@ -125,6 +125,7 @@ class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\Plugin
         $defaultDomain = Config::getSystemConfig()->get("general")->get("domain");
         $sitesMap[] = [
             'rootId' => 1,
+            'rootPath' => '',
             'protocol' => self::getProtocolForDomain($defaultDomain, $client),
             'domain' => $defaultDomain
         ];
@@ -139,6 +140,7 @@ class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\Plugin
             $protocol = self::getProtocolForDomain($siteRoot->getMainDomain(), $client);
             $sitesMap[] = [
                 'rootId' => $siteRoot->getRootId(),
+                'rootPath' => trim($siteRoot->getRootPath(), '/'),
                 'protocol' => $protocol,
                 'domain' => $siteRoot->getMainDomain()
             ];

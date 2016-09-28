@@ -4,6 +4,7 @@
     <!--
         <site>
           <rootId>1</rootId>
+          <rootPath>subsite</rootPath>
           <protocol>https</protocol>
           <domain>www.domain.com</domain>
         </site>
