@@ -33,7 +33,7 @@ class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\Plugin
 {
     const MAINTENANCE_JOB_GENERATE_SITEMAP = "create-sitemap";
     const SITEMAP_FOLDER = '/var/plugins/Sitemap';
-    const CONFIGURATION_FILE = PIMCORE_WEBSITE_PATH . '/var/plugins/sitemap/config.xml';
+    const CONFIGURATION_FILE = PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . '/config.xml';
 
     /**
      * {@inheritdoc}
