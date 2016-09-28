@@ -67,27 +67,24 @@ final class SitemapGenerator
     public function generateXml()
     {
         // Retrieve site trees
-        $siteRoots = new Site\Listing();
-        $siteRoots = $siteRoots->load();
+        $config = new \Zend_Config_Xml(SitemapPlugin::CONFIGURATION_FILE);
+        $siteRoots = $config->get('sites')->get('site');
 
-        // Build siteRoots table: [ ID => Domain ]
-        /* @var Site $siteRoot */
+        // Build siteRoots ID array
         foreach ($siteRoots as $siteRoot) {
-            $this->sitesRoots[$siteRoot->getRootId()] = $siteRoot->getMainDomain();
+            $this->sitesRoots[] = (int)$siteRoot->rootId;
         }
-
-        // Also append the default tree
-        $this->sitesRoots[1] = Config::getSystemConfig()->get("general")->get("domain");
 
         $notifySearchEngines = Config::getSystemConfig()->get("general")->get("environment") === "production";
-        foreach ($this->sitesRoots as $siteRootID => $siteRootDomain) {
-            $this->generateSiteXml($siteRootID, $siteRootDomain);
+        foreach ($siteRoots as $siteRoot) {
+            $hostUrl = $siteRoot->protocol . '://' . $siteRoot->domain;
+
+            $this->generateSiteXml((int)$siteRoot->rootId, $hostUrl);
 
             if ($notifySearchEngines) {
-                $this->notifySearchEngines('https://' . $siteRootDomain);
+                $this->notifySearchEngines($hostUrl);
             }
         }
-
     }
 
     /**
@@ -105,13 +102,13 @@ final class SitemapGenerator
         );
 
         // Set current hostUrl
-        $this->hostUrl = 'https://' . $hostUrl;
+        $this->hostUrl = $hostUrl;
 
         $rootDocument = Document::getById($rootId);
         $this->addUrlChild($rootDocument);
         $this->listAllChildren($rootDocument);
 
-        $this->xml->asXML(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . '/' . $hostUrl . '.xml');
+        $this->xml->asXML(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . '/' . parse_url($hostUrl, PHP_URL_HOST) . '.xml');
     }
 
     /**
@@ -127,7 +124,7 @@ final class SitemapGenerator
         /* @var $child Document */
         foreach ($children as $child) {
             // If we are on a siteRoot, skipping it (handled in a different sitemap)
-            if (array_key_exists($child->getId(), $this->sitesRoots)) {
+            if (in_array($child->getId(), $this->sitesRoots)) {
                 continue;
             }
 
@@ -147,7 +144,7 @@ final class SitemapGenerator
         if (
             $document instanceof Document\Page &&
             !$document->getProperty("sitemap_exclude")
-            && !array_key_exists($document->getId(), $this->sitesRoots)
+            && !in_array($document->getId(), $this->sitesRoots)
         ) {
             echo $this->hostUrl . $document->getFullPath() . "\n";
             $url = $this->xml->addChild("url");
