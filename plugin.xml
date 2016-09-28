@@ -24,5 +24,6 @@
         <pluginNamespaces>
             <namespace>Byng\Pimcore\Sitemap</namespace>
         </pluginNamespaces>
+        <pluginXmlEditorFile>/website/var/plugins/Sitemap/config.xml</pluginXmlEditorFile>
     </plugin>
 </zend-config>

@@ -20,7 +20,6 @@ use Byng\Pimcore\Sitemap\Notifier\GoogleNotifier;
 use Byng\Pimcore\Sitemap\SitemapPlugin;
 use Pimcore\Config;
 use Pimcore\Model\Document;
-use Pimcore\Model\Site;
 use SimpleXMLElement;
 
 /**
@@ -34,6 +33,11 @@ final class SitemapGenerator
      * @var string
      */
     private $hostUrl;
+
+    /**
+     * @var \Zend_Config
+     */
+    private $host;
 
     /**
      * @var SimpleXMLElement
@@ -67,27 +71,25 @@ final class SitemapGenerator
     public function generateXml()
     {
         // Retrieve site trees
-        $siteRoots = new Site\Listing();
-        $siteRoots = $siteRoots->load();
+        $config = new \Zend_Config_Xml(SitemapPlugin::CONFIGURATION_FILE);
+        $siteRoots = $config->get('sites')->get('site');
 
-        // Build siteRoots table: [ ID => Domain ]
-        /* @var Site $siteRoot */
+        // Build siteRoots ID array
+        /* @var \Zend_Config $siteRoot */
         foreach ($siteRoots as $siteRoot) {
-            $this->sitesRoots[$siteRoot->getRootId()] = $siteRoot->getMainDomain();
+            $this->sitesRoots[(int)$siteRoot->rootId] = $siteRoot;
         }
-
-        // Also append the default tree
-        $this->sitesRoots[1] = Config::getSystemConfig()->get("general")->get("domain");
 
         $notifySearchEngines = Config::getSystemConfig()->get("general")->get("environment") === "production";
-        foreach ($this->sitesRoots as $siteRootID => $siteRootDomain) {
-            $this->generateSiteXml($siteRootID, $siteRootDomain);
+        foreach ($siteRoots as $siteRoot) {
+            $hostUrl = $siteRoot->protocol . '://' . $siteRoot->domain;
+
+            $this->generateSiteXml((int)$siteRoot->rootId, $hostUrl);
 
             if ($notifySearchEngines) {
-                $this->notifySearchEngines('https://' . $siteRootDomain);
+                $this->notifySearchEngines($hostUrl);
             }
         }
-
     }
 
     /**
@@ -105,13 +107,14 @@ final class SitemapGenerator
         );
 
         // Set current hostUrl
-        $this->hostUrl = 'https://' . $hostUrl;
+        $this->hostUrl = $hostUrl;
+        $this->host = $this->sitesRoots[$rootId];
 
         $rootDocument = Document::getById($rootId);
         $this->addUrlChild($rootDocument);
         $this->listAllChildren($rootDocument);
 
-        $this->xml->asXML(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . '/' . $hostUrl . '.xml');
+        $this->xml->asXML(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . '/' . $this->host->domain . '.xml');
     }
 
     /**
@@ -149,9 +152,17 @@ final class SitemapGenerator
             !$document->getProperty("sitemap_exclude")
             && !array_key_exists($document->getId(), $this->sitesRoots)
         ) {
-            echo $this->hostUrl . $document->getFullPath() . "\n";
+            $fullPath = $document->getFullPath();
+
+            // Remove the site path (if any) from the full path
+            $rootPath = $this->host->rootPath;
+            if(!is_null($rootPath) && strpos($fullPath, '/' . $rootPath . '/') === 0){
+                $fullPath = str_replace('/' . $rootPath, '', $fullPath);
+            }
+
+            echo $this->hostUrl . $fullPath . "\n";
             $url = $this->xml->addChild("url");
-            $url->addChild('loc', $this->hostUrl . $document->getFullPath());
+            $url->addChild('loc', $this->hostUrl . $fullPath);
             $url->addChild('lastmod', $this->getDateFormat($document->getModificationDate()));
         }
     }
