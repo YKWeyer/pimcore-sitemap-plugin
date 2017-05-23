@@ -71,7 +71,7 @@ final class SitemapGenerator
     public function generateXml()
     {
         // Retrieve site trees
-        $config = new \Zend_Config_Xml(SitemapPlugin::CONFIGURATION_FILE);
+        $config = new \Zend_Config_Xml(SITEMAP_CONFIGURATION_FILE);
         $siteRoots = $config->get('sites')->get('site');
 
         // Build siteRoots ID array
@@ -114,7 +114,7 @@ final class SitemapGenerator
         $this->addUrlChild($rootDocument);
         $this->listAllChildren($rootDocument);
 
-        $this->xml->asXML(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . '/' . $this->host->domain . '.xml');
+        $this->xml->asXML(SITEMAP_PLUGIN_FOLDER . '/' . $this->host->domain . '.xml');
     }
 
     /**

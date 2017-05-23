@@ -88,8 +88,8 @@ final class Installer
     public function createSitemapFolder()
     {
         // Create sitemap folder (if doesn't exist already)
-        if (!is_dir(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER)) {
-            mkdir(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER, 0777, true);
+        if (!is_dir(SITEMAP_PLUGIN_FOLDER)) {
+            mkdir(SITEMAP_PLUGIN_FOLDER, 0777, true);
         }
     }
 
@@ -98,7 +98,7 @@ final class Installer
      */
     public function deleteSitemapFolder()
     {
-        $sitemapFolder = PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER;
+        $sitemapFolder = SITEMAP_PLUGIN_FOLDER;
         if (is_dir($sitemapFolder)) {
             if (!is_dir_empty($sitemapFolder)) {
                 array_map('unlink', glob($sitemapFolder . '/*'));
@@ -120,7 +120,7 @@ final class Installer
         $config = new \Zend_Config_Xml(PIMCORE_PLUGINS_PATH . '/PimcoreSitemapPlugin/install/config.xml', null, ['allowModifications' => true]);
         $config->sites = ['site' => $sites];
 
-        $configFile = SitemapPlugin::CONFIGURATION_FILE;
+        $configFile = SITEMAP_CONFIGURATION_FILE;
         if (!is_dir(dirname($configFile))) {
             if (!@mkdir(dirname($configFile), 0777, true)) {
                 throw new \Exception('Sitemap: Unable to create plugin config directory');
@@ -137,8 +137,8 @@ final class Installer
      */
     public function deleteConfigFile()
     {
-        if (file_exists(SitemapPlugin::CONFIGURATION_FILE)) {
-            unlink(SitemapPlugin::CONFIGURATION_FILE);
+        if (file_exists(SITEMAP_CONFIGURATION_FILE)) {
+            unlink(SITEMAP_CONFIGURATION_FILE);
         }
     }
 

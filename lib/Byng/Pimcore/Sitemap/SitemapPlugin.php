@@ -30,8 +30,22 @@ use Byng\Pimcore\Sitemap\Generator\SitemapGenerator;
 class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\PluginInterface
 {
     const MAINTENANCE_JOB_GENERATE_SITEMAP = "create-sitemap";
-    const SITEMAP_FOLDER = '/var/plugins/Sitemap';
-    const CONFIGURATION_FILE = PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . '/config.xml';
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __construct($jsPaths = null, $cssPaths = null)
+    {
+        parent::__construct($jsPaths, $cssPaths);
+
+        // Define constants (if not already defined in the startup.php)
+        if (!defined('SITEMAP_PLUGIN_FOLDER')) {
+            define('SITEMAP_PLUGIN_FOLDER', PIMCORE_WEBSITE_VAR . '/plugins/sitemap');
+        }
+        if (!defined('SITEMAP_CONFIGURATION_FILE')) {
+            define('SITEMAP_CONFIGURATION_FILE', SITEMAP_PLUGIN_FOLDER . '/config.xml');
+        }
+    }
 
     /**
      * {@inheritdoc}
@@ -94,7 +108,7 @@ class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\Plugin
     public static function isInstalled()
     {
         $property = PredefinedProperty::getByKey("sitemap_exclude");
-        return ($property && $property->getId() && file_exists(self::CONFIGURATION_FILE));
+        return ($property && $property->getId() && file_exists(SITEMAP_CONFIGURATION_FILE));
     }
 
 }

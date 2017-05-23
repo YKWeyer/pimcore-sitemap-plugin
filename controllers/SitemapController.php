@@ -36,7 +36,7 @@ final class Pimcoresitemapplugin_SitemapController extends Frontend
 
         // Outputting the XML
         header('Content-Type: text/xml');
-        readfile(PIMCORE_WEBSITE_PATH . SitemapPlugin::SITEMAP_FOLDER . $filename);
+        readfile(SITEMAP_PLUGIN_FOLDER . $filename);
         exit;
     }
 }
