@@ -15,14 +15,12 @@
 
 namespace Byng\Pimcore\Sitemap;
 
+use Byng\Pimcore\Sitemap\Plugin\Installer;
 use Pimcore\API\Plugin as PluginLib;
 use Pimcore\Model\Property\Predefined as PredefinedProperty;
 use Pimcore\Model\Schedule\Manager\Procedural as ProceduralScheduleManager;
 use Pimcore\Model\Schedule\Maintenance\Job as MaintenanceJob;
 use Byng\Pimcore\Sitemap\Generator\SitemapGenerator;
-use Pimcore\Config;
-use Pimcore\Model\Site;
-use Pimcore\Model\Staticroute;
 
 /**
  * Sitemap Plugin
@@ -59,52 +57,11 @@ class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\Plugin
     public static function install()
     {
         if (!SitemapPlugin::isInstalled()) {
-            $data = [
-                "key" => "sitemap_exclude",
-                "name" => "Sitemap: Exclude page",
-                "description" => "Add this property to exclude a page from the sitemap",
-                "ctype" => "document",
-                "type" => "bool",
-                "inheritable" => false,
-                "data" => true
-            ];
-            $property = PredefinedProperty::create();
-            $property->setValues($data);
-
-            $property->save();
-
-            // Create redirect rule
-            $route = Staticroute::create();
-            $route->setName('sitemap')
-                ->setPattern('/\/sitemap\.xml/')
-                ->setReverse('/sitemap.xml')
-                ->setModule('PimcoreSitemapPlugin')
-                ->setController('sitemap')
-                ->setAction('view')
-                ->save();
-
-            // Create sitemap folder (if doesn't exist already)
-            if (!is_dir(PIMCORE_WEBSITE_PATH . self::SITEMAP_FOLDER)) {
-                mkdir(PIMCORE_WEBSITE_PATH . self::SITEMAP_FOLDER, 0777, true);
-            }
-
-            // Get Sites FQDN map
-            $sites = self::getSitesProtocolMap();
-
-            // Create xml config file
-            $config = new \Zend_Config_Xml(PIMCORE_PLUGINS_PATH . '/PimcoreSitemapPlugin/install/config.xml', null, ['allowModifications' => true]);
-            $config->sites = ['site' => $sites];
-
-            $configFile = self::CONFIGURATION_FILE;
-            if (!is_dir(dirname($configFile))) {
-                if (!@mkdir(dirname($configFile), 0777, true)) {
-                    throw new \Exception('Sitemap: Unable to create plugin config directory');
-                }
-            }
-
-            $configWriter = new \Zend_Config_Writer_Xml();
-            $configWriter->setConfig($config);
-            $configWriter->write($configFile);
+            $installer = new Installer();
+            $installer->createProperties();
+            $installer->createRedirectRule();
+            $installer->createSitemapFolder();
+            $installer->createConfigFile();
 
             return "Sitemap plugin successfully installed";
         }
@@ -114,79 +71,16 @@ class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\Plugin
 
 
     /**
-     * @return array
-     */
-    public static function getSitesProtocolMap()
-    {
-        $client = new \Zend_Http_Client();
-        $sitesMap = [];
-
-        // Add the main domain
-        $defaultDomain = Config::getSystemConfig()->get("general")->get("domain");
-        $sitesMap[] = [
-            'rootId' => 1,
-            'rootPath' => '',
-            'protocol' => self::getProtocolForDomain($defaultDomain, $client),
-            'domain' => $defaultDomain
-        ];
-
-        // Retrieve site trees
-        $siteRoots = new Site\Listing();
-        $siteRoots = $siteRoots->load();
-
-        // Build siteRoots table: [ ID => FQDN ]
-        /* @var Site $siteRoot */
-        foreach ($siteRoots as $siteRoot) {
-            $protocol = self::getProtocolForDomain($siteRoot->getMainDomain(), $client);
-            $sitesMap[] = [
-                'rootId' => $siteRoot->getRootId(),
-                'rootPath' => trim($siteRoot->getRootPath(), '/'),
-                'protocol' => $protocol,
-                'domain' => $siteRoot->getMainDomain()
-            ];
-        }
-
-        return $sitesMap;
-    }
-
-    /**
-     * Test https for a domain name and returns either https or http depending on the server answer
-     * @param $domain
-     * @param \Zend_Http_Client|null $client
-     * @return string
-     */
-    private function getProtocolForDomain($domain, \Zend_Http_Client $client = null)
-    {
-        if (!$client) {
-            $client = new \Zend_Http_Client();
-        }
-        $client->setUri('https://' . $domain);
-        try {
-            $client->request();
-            $protocol = $client->getLastResponse()->getStatus() === 200 ? 'https' : 'http';
-        } catch (\Exception $e) {
-            $protocol = 'http';
-        }
-
-        return $protocol;
-    }
-
-    /**
      * {@inheritdoc}
      */
     public static function uninstall()
     {
         if (SitemapPlugin::isInstalled()) {
-            $property = PredefinedProperty::getByKey("sitemap_exclude");
-            $property->delete();
-
-            $route = Staticroute::getByName('sitemap');
-            $route->delete();
-
-            // Remove config file
-            if (file_exists(self::CONFIGURATION_FILE)) {
-                unlink(self::CONFIGURATION_FILE);
-            }
+            $installer = new Installer();
+            $installer->deleteProperties();
+            $installer->deleteRedirectRule();
+            $installer->deleteConfigFile();
+            $installer->deleteSitemapFolder();
 
             return "Sitemap plugin is successfully uninstalled";
         }
@@ -200,13 +94,7 @@ class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\Plugin
     public static function isInstalled()
     {
         $property = PredefinedProperty::getByKey("sitemap_exclude");
-        if (!$property || !$property->getId()) {
-            return false;
-        }
-        if (!file_exists(self::CONFIGURATION_FILE)) {
-            return false;
-        }
-        return true;
+        return ($property && $property->getId() && file_exists(self::CONFIGURATION_FILE));
     }
 
 }
