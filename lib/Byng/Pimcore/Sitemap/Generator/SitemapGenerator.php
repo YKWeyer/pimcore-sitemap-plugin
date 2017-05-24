@@ -31,6 +31,11 @@ final class SitemapGenerator
     /**
      * @var string
      */
+    const IMAGE_NAMESPACE = 'http://www.google.com/schemas/sitemap-image/1.1';
+
+    /**
+     * @var string
+     */
     private $hostUrl;
 
     /**
@@ -99,7 +104,7 @@ final class SitemapGenerator
         // Initialise XML file
         $this->xml = new SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>'
-            . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>'
+            . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="' . $this::IMAGE_NAMESPACE . '"></urlset>'
         );
 
         // Set current hostUrl
@@ -162,6 +167,34 @@ final class SitemapGenerator
             $url = $this->xml->addChild("url");
             $url->addChild('loc', $this->hostUrl . $fullPath);
             $url->addChild('lastmod', $this->getDateFormat($document->getModificationDate()));
+            $this->addImagesForPage($document, $url);
+        }
+    }
+
+
+    /**
+     * Lists and outputs all the images in a specific page
+     *
+     * @param Document\Page $page
+     * @param SimpleXMLElement $url
+     */
+    private function addImagesForPage(Document\Page $page, SimpleXMLElement $url)
+    {
+        $elements = $page->getElements();
+
+        foreach ($elements as $element) {
+            /* @var Document\Tag\Image $element */
+            if (is_a($element, 'Pimcore\Model\Document\Tag\Image') && $img_src = $element->getImage()) {
+                $image = $url->addChild('image:image', null, $this::IMAGE_NAMESPACE);
+                $image->addChild('image:loc', $this->hostUrl . $img_src->getFullPath(), $this::IMAGE_NAMESPACE);
+
+                if ($title = $element->getAlt() ?: $img_src->getMetadata('title')) {
+                    $image->addChild('image:title', strip_tags($title), $this::IMAGE_NAMESPACE);
+                }
+                if ($alt = $img_src->getMetadata('alt')) {
+                    $image->addChild('image:caption', strip_tags($alt), $this::IMAGE_NAMESPACE);
+                }
+            }
         }
     }
 
