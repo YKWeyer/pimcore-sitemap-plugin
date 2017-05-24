@@ -101,15 +101,16 @@ final class SitemapGenerator
      */
     private function generateSiteXml(SimpleXMLElement $siteConfig)
     {
-        // Initialise XML file
-        $this->xml = new SimpleXMLElement(
-            '<?xml version="1.0" encoding="UTF-8"?>'
-            . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="' . $this::IMAGE_NAMESPACE . '"></urlset>'
-        );
-
         // Set current hostUrl
         $this->hostUrl = $siteConfig->protocol . '://' . $siteConfig->domain;
         $this->host = $siteConfig;
+
+        // Initialise XML file
+        $this->xml = new SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<?xml-stylesheet type="text/xsl" href="' . $this->hostUrl . '/plugins/PimcoreSitemapPlugin/static/sitemap.xsl"?>'
+            . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="' . $this::IMAGE_NAMESPACE . '"></urlset>'
+        );
 
         // Navigate through current document subtree to generate XML
         $rootDocument = Document::getById($siteConfig->rootId);
