@@ -17,7 +17,6 @@ namespace Byng\Pimcore\Sitemap\Generator;
 
 use Byng\Pimcore\Sitemap\Gateway\DocumentGateway;
 use Byng\Pimcore\Sitemap\Notifier\GoogleNotifier;
-use Byng\Pimcore\Sitemap\SitemapPlugin;
 use Pimcore\Config;
 use Pimcore\Model\Document;
 use SimpleXMLElement;
@@ -35,7 +34,7 @@ final class SitemapGenerator
     private $hostUrl;
 
     /**
-     * @var \Zend_Config
+     * @var SimpleXMLElement
      */
     private $host;
 
@@ -71,11 +70,10 @@ final class SitemapGenerator
     public function generateXml()
     {
         // Retrieve site trees
-        $config = new \Zend_Config_Xml(SITEMAP_CONFIGURATION_FILE);
-        $siteRoots = $config->get('sites')->get('site');
+        $config = simplexml_load_file(SITEMAP_CONFIGURATION_FILE);
+        $siteRoots = $config->sites->site;
 
         // Build siteRoots ID array
-        /* @var \Zend_Config $siteRoot */
         foreach ($siteRoots as $siteRoot) {
             $this->sitesRoots[(int)$siteRoot->rootId] = $siteRoot;
         }
