@@ -182,6 +182,7 @@ final class SitemapGenerator
     private function addImagesForPage(Document\Page $page, SimpleXMLElement $url)
     {
         $elements = $page->getElements();
+        $locale = $page->getProperty("language");
 
         foreach ($elements as $element) {
             /* @var Document\Tag\Image $element */
@@ -189,10 +190,10 @@ final class SitemapGenerator
                 $image = $url->addChild('image:image', null, $this::IMAGE_NAMESPACE);
                 $image->addChild('image:loc', $this->hostUrl . $img_src->getFullPath(), $this::IMAGE_NAMESPACE);
 
-                if ($title = $element->getAlt() ?: $img_src->getMetadata('title')) {
+                if ($title = $element->getAlt() ?: $img_src->getMetadata('title', $locale)) {
                     $image->addChild('image:title', strip_tags($title), $this::IMAGE_NAMESPACE);
                 }
-                if ($alt = $img_src->getMetadata('alt')) {
+                if ($alt = $img_src->getMetadata('alt', $locale)) {
                     $image->addChild('image:caption', strip_tags($alt), $this::IMAGE_NAMESPACE);
                 }
             }
