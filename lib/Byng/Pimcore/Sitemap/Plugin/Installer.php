@@ -65,7 +65,7 @@ final class Installer
         // Create redirect rule
         $route = Staticroute::create();
         $route->setName('sitemap')
-            ->setPattern('/\/sitemap\.xml/')
+            ->setPattern('/^\/sitemap\.xml$/')
             ->setReverse('/sitemap.xml')
             ->setModule('PimcoreSitemapPlugin')
             ->setController('sitemap')
