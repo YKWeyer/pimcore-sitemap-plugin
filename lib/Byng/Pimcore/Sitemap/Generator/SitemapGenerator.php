@@ -148,14 +148,18 @@ final class SitemapGenerator
         if (
             $document instanceof Document\Page &&
             !$document->getProperty("sitemap_exclude")
-            && !array_key_exists($document->getId(), $this->sitesRoots)
         ) {
             $fullPath = $document->getFullPath();
 
             // Remove the site path (if any) from the full path
-            $rootPath = $this->host->rootPath;
-            if(!is_null($rootPath) && strpos($fullPath, '/' . $rootPath . '/') === 0){
-                $fullPath = str_replace('/' . $rootPath, '', $fullPath);
+            $rootPath = (string)$this->host->rootPath;
+            if (!empty($rootPath) && strpos($fullPath, '/' . $rootPath) === 0) {
+                if ($fullPath === '/' . $rootPath) {
+                    // Special case for the homepage
+                    $fullPath = '';
+                } else {
+                    $fullPath = str_replace('/' . $rootPath . '/', '/', $fullPath);
+                }
             }
 
             echo $this->hostUrl . $fullPath . "\n";
