@@ -25,11 +25,12 @@ use Pimcore\Model\Staticroute;
  * Class Installer
  *
  * @package Byng\Pimcore\Sitemap\Plugin
+ * @author Yann Weyer <yann.weyer@orderbird.com>
  */
 final class Installer
 {
     /**
-     * Create predefined properties to be used in the admin interface
+     * Creates predefined properties to be used in the admin interface
      */
     public function createProperties()
     {
@@ -49,7 +50,7 @@ final class Installer
     }
 
     /**
-     * Delete predefined properties
+     * Deletes predefined properties
      */
     public function deleteProperties()
     {
@@ -58,11 +59,10 @@ final class Installer
     }
 
     /**
-     * Set up the redirect rules used to display the appropriate sitemap file
+     * Creates the redirect rules used to display the appropriate sitemap file
      */
     public function createRedirectRule()
     {
-        // Create redirect rule
         $route = Staticroute::create();
         $route->setName('sitemap')
             ->setPattern('/^\/sitemap\.xml$/')
@@ -74,7 +74,7 @@ final class Installer
     }
 
     /**
-     * Remove the redirect rule
+     * Removes the redirect rule
      */
     public function deleteRedirectRule()
     {
@@ -83,7 +83,7 @@ final class Installer
     }
 
     /**
-     * Create the sitemap folder
+     * Creates the sitemap folder
      */
     public function createSitemapFolder()
     {
@@ -94,16 +94,15 @@ final class Installer
     }
 
     /**
-     * Delete the sitemap folder and its children
+     * Deletes the sitemap folder and its children
      */
     public function deleteSitemapFolder()
     {
-        $sitemapFolder = SITEMAP_PLUGIN_FOLDER;
-        if (is_dir($sitemapFolder)) {
-            if (!is_dir_empty($sitemapFolder)) {
-                array_map('unlink', glob($sitemapFolder . '/*'));
+        if (is_dir(SITEMAP_PLUGIN_FOLDER)) {
+            if (!is_dir_empty(SITEMAP_PLUGIN_FOLDER)) {
+                array_map('unlink', glob(SITEMAP_PLUGIN_FOLDER . '/*'));
             }
-            rmdir($sitemapFolder);
+            rmdir(SITEMAP_PLUGIN_FOLDER);
         }
     }
 
@@ -120,20 +119,19 @@ final class Installer
         $config = new \Zend_Config_Xml(PIMCORE_PLUGINS_PATH . '/PimcoreSitemapPlugin/install/config.xml', null, ['allowModifications' => true]);
         $config->sites = ['site' => $sites];
 
-        $configFile = SITEMAP_CONFIGURATION_FILE;
-        if (!is_dir(dirname($configFile))) {
-            if (!@mkdir(dirname($configFile), 0777, true)) {
+        if (!is_dir(dirname(SITEMAP_CONFIGURATION_FILE))) {
+            if (!@mkdir(dirname(SITEMAP_CONFIGURATION_FILE), 0777, true)) {
                 throw new \Exception('Sitemap: Unable to create plugin config directory');
             }
         }
 
         $configWriter = new \Zend_Config_Writer_Xml();
         $configWriter->setConfig($config);
-        $configWriter->write($configFile);
+        $configWriter->write(SITEMAP_CONFIGURATION_FILE);
     }
 
     /**
-     * Delete the configuration file
+     * Deletes the configuration file
      */
     public function deleteConfigFile()
     {
@@ -167,11 +165,10 @@ final class Installer
         // Build siteRoots table: [ ID => FQDN ]
         /* @var Site $siteRoot */
         foreach ($siteRoots as $siteRoot) {
-            $protocol = $this->getProtocolForDomain($siteRoot->getMainDomain(), $client);
             $sitesMap[] = [
                 'rootId' => $siteRoot->getRootId(),
                 'rootPath' => trim($siteRoot->getRootPath(), '/'),
-                'protocol' => $protocol,
+                'protocol' => $this->getProtocolForDomain($siteRoot->getMainDomain(), $client),
                 'domain' => $siteRoot->getMainDomain()
             ];
         }
@@ -181,7 +178,7 @@ final class Installer
 
 
     /**
-     * Test https for a domain name and returns either https or http depending on the server answer
+     * Tests https for a domain name and returns either https or http depending on the server answer
      * @param $domain
      * @param \Zend_Http_Client|null $client
      * @return string

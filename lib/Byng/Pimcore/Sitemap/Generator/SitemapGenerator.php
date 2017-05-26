@@ -63,7 +63,7 @@ final class SitemapGenerator
     }
 
     /**
-     * Generates the sitemap.xml file
+     * Generates the sitemap.xml file for each available Pimcore\Model\Site
      *
      * @return void
      */
@@ -75,44 +75,44 @@ final class SitemapGenerator
 
         // Build siteRoots ID array
         foreach ($siteRoots as $siteRoot) {
-            $this->sitesRoots[(int)$siteRoot->rootId] = $siteRoot;
+            $this->sitesRoots[] = (int)$siteRoot->rootId;
         }
 
         $notifySearchEngines = Config::getSystemConfig()->get("general")->get("environment") === "production";
         foreach ($siteRoots as $siteRoot) {
-            $hostUrl = $siteRoot->protocol . '://' . $siteRoot->domain;
-
-            $this->generateSiteXml((int)$siteRoot->rootId, $hostUrl);
+            $this->generateSiteXml($siteRoot);
 
             if ($notifySearchEngines) {
-                $this->notifySearchEngines($hostUrl);
+                $this->notifySearchEngines();
             }
         }
     }
 
     /**
-     * Generate a sitemap xml file for a defined site, with a specific hostUrl
+     * Generates a sitemap xml file for a defined site
      *
-     * @param int $rootId
-     * @param string $hostUrl
+     * @param SimpleXMLElement $siteConfig
      * @return string
      */
-    private function generateSiteXml($rootId, $hostUrl)
+    private function generateSiteXml(SimpleXMLElement $siteConfig)
     {
+        // Initialise XML file
         $this->xml = new SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>'
             . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>'
         );
 
         // Set current hostUrl
-        $this->hostUrl = $hostUrl;
-        $this->host = $this->sitesRoots[$rootId];
+        $this->hostUrl = $siteConfig->protocol . '://' . $siteConfig->domain;
+        $this->host = $siteConfig;
 
-        $rootDocument = Document::getById($rootId);
+        // Navigate through current document subtree to generate XML
+        $rootDocument = Document::getById($siteConfig->rootId);
         $this->addUrlChild($rootDocument);
         $this->listAllChildren($rootDocument);
 
-        $this->xml->asXML(SITEMAP_PLUGIN_FOLDER . '/' . $this->host->domain . '.xml');
+        // Save current XML
+        $this->xml->asXML(SITEMAP_PLUGIN_FOLDER . '/' . $siteConfig->domain . '.xml');
     }
 
     /**
@@ -128,7 +128,7 @@ final class SitemapGenerator
         /* @var $child Document */
         foreach ($children as $child) {
             // If we are on a siteRoot, skipping it (handled in a different sitemap)
-            if (array_key_exists($child->getId(), $this->sitesRoots)) {
+            if (in_array($child->getId(), $this->sitesRoots)) {
                 continue;
             }
 
@@ -154,12 +154,8 @@ final class SitemapGenerator
             // Remove the site path (if any) from the full path
             $rootPath = (string)$this->host->rootPath;
             if (!empty($rootPath) && strpos($fullPath, '/' . $rootPath) === 0) {
-                if ($fullPath === '/' . $rootPath) {
-                    // Special case for the homepage
-                    $fullPath = '';
-                } else {
-                    $fullPath = str_replace('/' . $rootPath . '/', '/', $fullPath);
-                }
+                // Special case for the website homepage
+                $fullPath = ($fullPath === '/' . $rootPath) ? '' : str_replace('/' . $rootPath . '/', '/', $fullPath);
             }
 
             echo $this->hostUrl . $fullPath . "\n";
@@ -186,15 +182,14 @@ final class SitemapGenerator
      * @param string $domain
      * @return void
      */
-    private function notifySearchEngines($domain = null)
+    private function notifySearchEngines()
     {
         $googleNotifier = new GoogleNotifier();
 
-        if ($googleNotifier->notify($domain)) {
+        if ($googleNotifier->notify($this->hostUrl)) {
             echo "Google has been notified \n";
         } else {
             echo "Google has not been notified \n";
         }
     }
-
 }
