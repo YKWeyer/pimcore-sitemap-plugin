@@ -18,6 +18,7 @@ namespace Byng\Pimcore\Sitemap\Generator;
 use Byng\Pimcore\Sitemap\Gateway\DocumentGateway;
 use Byng\Pimcore\Sitemap\Notifier\GoogleNotifier;
 use Pimcore\Config;
+use Pimcore\Model\Asset\Image\Thumbnail;
 use Pimcore\Model\Document;
 use SimpleXMLElement;
 
@@ -187,8 +188,16 @@ final class SitemapGenerator
         foreach ($elements as $element) {
             /* @var Document\Tag\Image $element */
             if (is_a($element, 'Pimcore\Model\Document\Tag\Image') && $image = $element->getImage()) {
+                $thumbnail = new Thumbnail($image);
+                $image_path = $thumbnail->getPath(false);
+
+                // Prepend current domain name in case of relative path
+                if ('/' === substr($image_path, 0, 1)) {
+                    $image_path = $this->hostUrl . $image_path;
+                }
+
                 $imageBlock = $url->addChild('image:image', null, $this::IMAGE_NAMESPACE);
-                $imageBlock->addChild('image:loc', $this->hostUrl . $image->getFullPath(), $this::IMAGE_NAMESPACE);
+                $imageBlock->addChild('image:loc', $image_path, $this::IMAGE_NAMESPACE);
 
                 if ($title = $element->getAlt() ?: $image->getMetadata('title', $locale)) {
                     $imageBlock->addChild('image:title', strip_tags($title), $this::IMAGE_NAMESPACE);
