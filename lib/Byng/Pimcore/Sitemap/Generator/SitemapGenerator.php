@@ -186,15 +186,15 @@ final class SitemapGenerator
 
         foreach ($elements as $element) {
             /* @var Document\Tag\Image $element */
-            if (is_a($element, 'Pimcore\Model\Document\Tag\Image') && $img_src = $element->getImage()) {
-                $image = $url->addChild('image:image', null, $this::IMAGE_NAMESPACE);
-                $image->addChild('image:loc', $this->hostUrl . $img_src->getFullPath(), $this::IMAGE_NAMESPACE);
+            if (is_a($element, 'Pimcore\Model\Document\Tag\Image') && $image = $element->getImage()) {
+                $imageBlock = $url->addChild('image:image', null, $this::IMAGE_NAMESPACE);
+                $imageBlock->addChild('image:loc', $this->hostUrl . $image->getFullPath(), $this::IMAGE_NAMESPACE);
 
-                if ($title = $element->getAlt() ?: $img_src->getMetadata('title', $locale)) {
-                    $image->addChild('image:title', strip_tags($title), $this::IMAGE_NAMESPACE);
+                if ($title = $element->getAlt() ?: $image->getMetadata('title', $locale)) {
+                    $imageBlock->addChild('image:title', strip_tags($title), $this::IMAGE_NAMESPACE);
                 }
-                if ($alt = $img_src->getMetadata('alt', $locale)) {
-                    $image->addChild('image:caption', strip_tags($alt), $this::IMAGE_NAMESPACE);
+                if ($alt = $image->getMetadata('alt', $locale)) {
+                    $imageBlock->addChild('image:caption', strip_tags($alt), $this::IMAGE_NAMESPACE);
                 }
             }
         }
