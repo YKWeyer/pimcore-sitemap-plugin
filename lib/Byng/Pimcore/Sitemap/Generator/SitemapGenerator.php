@@ -51,7 +51,7 @@ final class SitemapGenerator
     /**
      * @var array
      */
-    private $sitesRoots = array();
+    private $sitesRoots = [];
 
 
     /**
