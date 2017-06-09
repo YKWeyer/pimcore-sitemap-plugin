@@ -28,15 +28,22 @@ final class Pimcoresitemapplugin_SitemapController extends Frontend
     {
         // Special case: subsite in the tree
         if (isset($this->document) && $site = \Pimcore\Tool\Frontend::getSiteForDocument($this->document)) {
-            $filename = '/' . $site->getMainDomain() . '.xml';
+            $domain = $site->getMainDomain();
         } else {
             // Default filename
-            $filename = '/' . \Pimcore\Config::getSystemConfig()->get("general")->get("domain") . '.xml';
+            $domain = \Pimcore\Config::getSystemConfig()->get("general")->get("domain");
         }
 
-        // Outputting the XML
+        $filename = SITEMAP_PLUGIN_FOLDER . '/' . $domain . '.xml';
+
+        // Throw a 404 if there is no sitemap for this domain
+        if (!file_exists($filename)) {
+            throw new Zend_Controller_Action_Exception("Sitemap for domain '$domain' not found, please check the plugin configuration", 404);
+        }
+
+        // Output the XML
         header('Content-Type: text/xml');
-        readfile(SITEMAP_PLUGIN_FOLDER . $filename);
+        readfile($filename);
         exit;
     }
 }
