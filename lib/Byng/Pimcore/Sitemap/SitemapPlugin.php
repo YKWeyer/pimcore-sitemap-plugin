@@ -39,8 +39,11 @@ class SitemapPlugin extends PluginLib\AbstractPlugin implements PluginLib\Plugin
         parent::__construct($jsPaths, $cssPaths);
 
         // Define constants (if not already defined in the startup.php)
+        if (!defined('PIMCORE_PLUGINS_VAR')) {
+            define('PIMCORE_PLUGINS_VAR', PIMCORE_WEBSITE_VAR . '/plugins');
+        }
         if (!defined('SITEMAP_PLUGIN_FOLDER')) {
-            define('SITEMAP_PLUGIN_FOLDER', PIMCORE_WEBSITE_VAR . '/plugins/sitemap');
+            define('SITEMAP_PLUGIN_FOLDER', PIMCORE_PLUGINS_VAR . '/sitemap');
         }
         if (!defined('SITEMAP_CONFIGURATION_FILE')) {
             define('SITEMAP_CONFIGURATION_FILE', SITEMAP_PLUGIN_FOLDER . '/config.xml');
