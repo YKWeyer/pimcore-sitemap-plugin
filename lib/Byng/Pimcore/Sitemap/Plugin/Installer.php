@@ -99,8 +99,9 @@ final class Installer
     public function deleteSitemapFolder()
     {
         if (is_dir(SITEMAP_PLUGIN_FOLDER)) {
-            if (!is_dir_empty(SITEMAP_PLUGIN_FOLDER)) {
-                array_map('unlink', glob(SITEMAP_PLUGIN_FOLDER . '/*'));
+            $children = glob(SITEMAP_PLUGIN_FOLDER . '/*');
+            if (count($children) > 0) {
+                array_map('unlink', $children);
             }
             rmdir(SITEMAP_PLUGIN_FOLDER);
         }
@@ -151,12 +152,15 @@ final class Installer
 
         // Add the main domain
         $defaultDomain = Config::getSystemConfig()->get("general")->get("domain");
-        $sitesMap[] = [
-            'rootId' => 1,
-            'rootPath' => '',
-            'protocol' => $this->getProtocolForDomain($defaultDomain, $client),
-            'domain' => $defaultDomain
-        ];
+
+        if($defaultDomain) {
+            $sitesMap[] = [
+                'rootId' => 1,
+                'rootPath' => '',
+                'protocol' => $this->getProtocolForDomain($defaultDomain, $client),
+                'domain' => $defaultDomain
+            ];
+        }
 
         // Retrieve site trees
         $siteRoots = new Site\Listing();
